@@ -122,6 +122,8 @@ sub _default_settings {
               { name => 'entity_control', label => $locale->text('Entity number') },
               { name => 'customernumber', label => $locale->text('Customer Number') },
               { name => 'vendornumber', label => $locale->text('Vendor Number') },
+              { name => 'paynumber', label => $locale->text('Payment Number') },
+              { name => 'asset_report_number', label => $locale->text('Asset Report Number') },
               ] },
         { title => $locale->text('Misc Settings'),
           items => [

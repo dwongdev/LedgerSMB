@@ -1082,7 +1082,7 @@ BEGIN
      INSERT INTO transactions (
        id, reference, description,
        transdate, entered_by, approved, trans_type_code, table_name)
-     VALUES (nextval('id'), setting_increment('glnumber'),
+     VALUES (nextval('id'), setting_increment('paynumber'),
              in_gl_description, in_datepaid, var_employee,
              in_approved, 'op', 'payment')
      RETURNING id INTO var_txn_id;
