@@ -207,7 +207,7 @@ Begin
 
   INSERT INTO transactions (id, reference, description, transdate,
                         approved, trans_type_code, table_name)
-        SELECT nextval('id'), setting_increment('glnumber'),
+        SELECT nextval('id'), setting_increment('asset_report_number'),
                'Asset Report ' || asset_report.id,
                 report_date,
                 coalesce((select value::boolean from defaults
@@ -822,7 +822,7 @@ $$
     id, reference,
     description,
     transdate, approved, trans_type_code, table_name)
-  SELECT nextval('id'), setting_increment('glnumber'),
+  SELECT nextval('id'), setting_increment('asset_report_number'),
         'Asset Report ' || asset_report.id,
         report_date, false, 'fd', 'asset_report'
     FROM asset_report
