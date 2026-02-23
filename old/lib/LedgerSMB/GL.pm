@@ -112,12 +112,12 @@ sub post_transaction {
         $dbh->do($query, {}, $form->{transdate}) or $form->dberror($query);
 
         $query = qq|
-      INSERT INTO gl (id, reference, notes, transdate)
-           VALUES (currval('id'), ?, ?, ?)
+      INSERT INTO gl (id, reference, notes)
+           VALUES (currval('id'), ?, ?)
       RETURNING id|;
 
         $sth = $dbh->prepare($query) || $form->dberror($query);
-        $sth->execute($form->{reference}, $form->{notes}, $form->{transdate})
+        $sth->execute($form->{reference}, $form->{notes})
             || $form->dberror($query);
 
         ( $form->{id} ) = $sth->fetchrow_array();
@@ -148,7 +148,7 @@ UPDATE gl
     }
 
     if (defined $form->{approved}) {
-        my $query = qq| UPDATE gl SET approved = ? WHERE id = ?|;
+        my $query = qq| UPDATE transactions SET approved = ? WHERE id = ?|;
         $dbh->prepare($query)->execute($form->{approved}, $form->{id})
              || $form->dberror($query);
         if (!$form->{approved} and $form->{batch_id}){
