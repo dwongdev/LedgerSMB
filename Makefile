@@ -75,6 +75,7 @@ ifneq ($(origin DBNAME),undefined)
 ifneq ($(origin DOCKER_CMD),undefined)
 	$(DOCKER_CMD) make dbdocs DBNAME="$(DBNAME)"
 else
+	-dropdb -h "$${PGHOST:-localhost}" -U "$${PGUSER:-postgres}" $(DBNAME)
 	perl -Ilib bin/ledgersmb-admin create $${PGUSER:-postgres}@$${PGHOST:-localhost}/$(DBNAME)
 	( cd doc/database ; postgresql_autodoc -h "$${PGHOST:-localhost}" -d "$(DBNAME)" -U "$${PGUSER:-postgres}" )
 endif
