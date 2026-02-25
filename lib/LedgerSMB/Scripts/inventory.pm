@@ -60,12 +60,12 @@ sub adjustment_next {
     my ($request) = @_;
     my $adjustment = LedgerSMB::Inventory::Adjust->new(
         %$request,
-        transdate => $request->parse_date( $request->{transdate} ),
+        report_date => $request->parse_date( $request->{report_date} ),
         );
     for my $i (1 .. $request->{rowcount}){
         if ($request->{"id_$i"} eq 'new' or not $request->{"id_$i"}){
             my $item = $adjustment->get_part_at_date(
-                $request->{transdate}, $request->{"partnumber_$i"});
+                $request->{report_date}, $request->{"partnumber_$i"});
             $request->{"id_$i"} = $item->{id};
             $request->{"description_$i"} = $item->{description};
             $request->{"onhand_$i"} = $item->{onhand};
@@ -113,7 +113,7 @@ sub adjustment_save {
     my ($request) = @_;
     my $adjustment = LedgerSMB::Inventory::Adjust->new(
         %$request,
-        transdate => $request->parse_date( $request->{transdate} ),
+        report_date => $request->parse_date( $request->{report_date} ),
         );
     _lines_from_form($request, $adjustment, $request);
     $adjustment->save;

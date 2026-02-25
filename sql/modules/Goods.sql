@@ -322,11 +322,11 @@ SELECT oe.transdate,
    GROUP BY p.id, p.partnumber;
 $$;
 
-CREATE OR REPLACE FUNCTION inventory_adjust__create(in_transdate date)
+CREATE OR REPLACE FUNCTION inventory_adjust__create(in_report_date date)
 RETURNS inventory_report
 AS
 $$
-        INSERT INTO inventory_report(transdate) values (in_transdate)
+        INSERT INTO inventory_report(report_date) values (in_report_date)
         RETURNING *;
 $$ language sql;
 
@@ -335,15 +335,15 @@ CREATE OR REPLACE FUNCTION inventory_adjust__search
 RETURNS SETOF inventory_report AS
 $$
 
-   SELECT r.id, r.transdate, r.source, r.trans_id
+   SELECT r.id, r.report_date, r.source, r.trans_id
      FROM inventory_report r
   LEFT JOIN inventory_report_line l ON l.adjust_id = r.id
      JOIN parts p ON l.parts_id = p.id
-    WHERE ($1 is null or $1 <= r.transdate) AND
-          ($2 is null OR $2 >= r.transdate) AND
+    WHERE ($1 is null or $1 <= r.report_date) AND
+          ($2 is null OR $2 >= r.report_date) AND
           ($3 IS NULL OR plainto_tsquery($3) @@ tsvector(p.partnumber)) AND
           ($4 IS NULL OR source LIKE $4 || '%')
- GROUP BY r.id, r.transdate, r.source, r.trans_id;
+ GROUP BY r.id, r.report_date, r.source, r.trans_id;
 $$ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION inventory_adjust__save_line
@@ -359,11 +359,11 @@ RETURNING *;
 $$;
 
 CREATE OR REPLACE FUNCTION inventory_adjust__save_info
-(in_transdate date, in_source text)
+(in_report_date date, in_source text)
 RETURNS inventory_report
 LANGUAGE SQL AS
 $$
-INSERT INTO inventory_report(transdate, source)
+INSERT INTO inventory_report(report_date, source)
 VALUES ($1, $2)
 RETURNING *;
 $$;
@@ -394,7 +394,7 @@ END IF;
     trans_type_code, table_name)
   VALUES (nextval('id'),
           'Transaction due to approval of inventory adjustment',
-          inv.transdate, 'invadj-' || in_id, true,
+          inv.report_date, 'invadj-' || in_id, true,
           'ia', 'inventory_report')
     RETURNING id INTO t_trans_id;
 
@@ -468,8 +468,8 @@ CREATE OR REPLACE FUNCTION inventory_adjust__list
 RETURNS SETOF inventory_report language sql as $$
 
 SELECT * FROM inventory_report
- WHERE ($1 is null or transdate >= $1)
-       AND ($2 IS NULL OR transdate <= $2)
+ WHERE ($1 is null or report_date >= $1)
+       AND ($2 IS NULL OR report_date <= $2)
        AND ($3 IS NULL OR $3 = (trans_id IS NOT NULL));
 
 $$;
