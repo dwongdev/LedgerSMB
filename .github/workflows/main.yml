@@ -364,6 +364,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           flag-name: webservices-ui
+          fail-on-error: false
           parallel: true
           file: ${{ github.workspace }}/UI/coverage/lcov.info
         if: ${{ matrix.COVERAGE }}
