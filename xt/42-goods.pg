@@ -153,7 +153,7 @@ BEGIN;
     INSERT INTO invoice (id, trans_id, parts_id, qty, allocated, sellprice)
     VALUES (-1103, -1103, -2, -150, 75, 9);
 
-    INSERT INTO inventory_report (transdate) VALUES (now()::date);
+    INSERT INTO inventory_report (report_date) VALUES (now()::date);
 
     -- LedgerSMB::Inventory::Adjust_Line defines variance as:
     --   counted - expected
@@ -175,7 +175,7 @@ BEGIN;
                               'inventory adjustment, save adjustment lines');
     DEALLOCATE test;
 
-    PREPARE test AS SELECT transdate, trans_id
+    PREPARE test AS SELECT report_date, trans_id
                      FROM inventory_report
                     WHERE id = currval('inventory_report_id_seq');
     SELECT results_eq('test', $$VALUES(now()::date, currval('id')::int)$$,
@@ -234,7 +234,7 @@ BEGIN;
 
     -- Above, we created a report with adjustments both ways.
     -- Create one which only goes one way (leaving out the ar or ap transaction)
-    INSERT INTO inventory_report (transdate) VALUES (now()::date);
+    INSERT INTO inventory_report (report_date) VALUES (now()::date);
     SELECT inventory_adjust__save_line(currval('inventory_report_id_seq')::int,
                                 -1, 100, 90, 10);
     SELECT inventory_adjust__approve(currval('inventory_report_id_seq')::int);
