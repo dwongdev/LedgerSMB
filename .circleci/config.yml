@@ -25,6 +25,214 @@ commands:
     steps:
       - run: git show -m HEAD --name-only --pretty="" | egrep -q -v '<< parameters.pattern >>' || circleci step halt
 
+  jest:
+    steps:
+      - run:
+          name: Run Jest JS tests
+          command: |
+            export PWD="${CIRCLE_WORKING_DIRECTORY/#\~/$HOME}"
+            export PERL5LIB="lib:old/lib:$PERL5LIB"
+            if [ "x$COVERAGE" == "x1" ]
+            then
+              make jstest TESTS='--coverage'
+              # Make Coverage appear from root instead of UI to integrate in Coveralls
+              sed -i -E "s~^SF:(js-src|src)/~SF:UI/\1/~g" UI/coverage/lcov.info
+            else
+              make jstest
+            fi
+
+  dev-prove:
+    steps:
+      - run:
+          name: Set up coverage
+          command: |
+            if [ "x$COVERAGE" == "x1" ]
+            then
+              echo "JOB_COUNT=4" >> $BASH_ENV
+              echo "STARMAN_DEVEL_COVER_OPTIONS='-MDevel::Cover=$DEVEL_COVER_OPTIONS'" >> $BASH_ENV
+              echo "YATH_DEVEL_COVER_OPTIONS='--cover=$DEVEL_COVER_OPTIONS'" >> $BASH_ENV
+              echo "UITESTS='--coverage *'" >> $BASH_ENV
+            fi
+
+      - run:
+          command: |
+            source $BASH_ENV
+            export PERL5OPT="$PERL5OPT -MSyntax::Keyword::Try::Deparse"
+            echo "Waiting for starman to listen to our port:"
+            while ! echo -n > /dev/tcp/localhost/5762; do
+              sleep 1
+            done
+            if [ "x$COVERAGE" == "x1" ]
+            then
+              make devtest TESTS="--no-progress --job-count $JOB_COUNT \"--cover=$DEVEL_COVER_OPTIONS\" xt/*.t"
+            else
+              make devtest TESTS="--no-progress --job-count 2 xt/*.t"
+            fi
+
+      - run:
+          command: |
+            while [ $(pidof starman) ];
+            do
+              kill -SIGTERM `pidof starman`
+              echo -n "."
+              sleep 5
+            done
+            echo " done"
+
+      - run:
+          name: Upload coverage data
+          command: |
+            if [ "x$COVERAGE" == "x1" ]
+            then
+              COVERALLS_PARALLEL=true cover -report coveralls
+              COVERALLS_FLAG_NAME: Perl Tests
+              cover -report text > /tmp/artifact/coverage.txt
+            fi
+
+      - when:
+          condition:
+            equal: [ "$COVERAGE", "1" ]
+          steps:
+            - coveralls/upload:
+                parallel: true
+                flag_name: UI Tests
+                verbose: false
+
+      - when:
+          condition:
+            equal: [ "$COVERAGE", "1" ]
+          steps:
+            - coveralls/upload:
+                parallel_finished: true
+
+  dev-prove-bdd:
+    steps:
+      - run:
+          name: Set up coverage
+          command: |
+            if [ "x$COVERAGE" == "x1" ]
+            then
+              echo "JOB_COUNT=4" >> $BASH_ENV
+              echo "STARMAN_DEVEL_COVER_OPTIONS='-MDevel::Cover=$DEVEL_COVER_OPTIONS'" >> $BASH_ENV
+              echo "YATH_DEVEL_COVER_OPTIONS='--cover=$DEVEL_COVER_OPTIONS'" >> $BASH_ENV
+              echo "UITESTS='--coverage *'" >> $BASH_ENV
+            fi
+
+      - run:
+          command: |
+            source $BASH_ENV
+            export PERL5OPT="$PERL5OPT -MSyntax::Keyword::Try::Deparse"
+            echo "Waiting for starman to listen to our port:"
+            while ! echo -n > /dev/tcp/localhost/5762; do
+              sleep 1
+            done
+            if [ "x$COVERAGE" == "x1" ]
+            then
+              make devtest TESTS="--no-progress --job-count $JOB_COUNT \"--cover=$DEVEL_COVER_OPTIONS\" xt/*.feature xt/66-cucumber/*/*.feature"
+            else
+              make devtest TESTS="--no-progress --job-count 2 xt/*.feature xt/66-cucumber/*/*.feature"
+            fi
+
+      - run:
+          command: |
+            while [ $(pidof starman) ];
+            do
+              kill -SIGTERM `pidof starman`
+              echo -n "."
+              sleep 5
+            done
+            echo " done"
+
+      - run:
+          name: Upload coverage data
+          command: |
+            if [ "x$COVERAGE" == "x1" ]
+            then
+              COVERALLS_PARALLEL=true cover -report coveralls
+              COVERALLS_FLAG_NAME: Perl Tests
+              cover -report text > /tmp/artifact/coverage.txt
+            fi
+
+      - when:
+          condition:
+            equal: [ "$COVERAGE", "1" ]
+          steps:
+            - coveralls/upload:
+                parallel: true
+                flag_name: UI Tests
+                verbose: false
+
+      - when:
+          condition:
+            equal: [ "$COVERAGE", "1" ]
+          steps:
+            - coveralls/upload:
+                parallel_finished: true
+
+  dev-prove-pg:
+    steps:
+      - run:
+          name: Set up coverage
+          command: |
+            if [ "x$COVERAGE" == "x1" ]
+            then
+              echo "JOB_COUNT=4" >> $BASH_ENV
+              echo "STARMAN_DEVEL_COVER_OPTIONS='-MDevel::Cover=$DEVEL_COVER_OPTIONS'" >> $BASH_ENV
+              echo "YATH_DEVEL_COVER_OPTIONS='--cover=$DEVEL_COVER_OPTIONS'" >> $BASH_ENV
+              echo "UITESTS='--coverage *'" >> $BASH_ENV
+            fi
+
+      - run:
+          command: |
+            source $BASH_ENV
+            export PERL5OPT="$PERL5OPT -MSyntax::Keyword::Try::Deparse"
+            echo "Waiting for starman to listen to our port:"
+            while ! echo -n > /dev/tcp/localhost/5762; do
+              sleep 1
+            done
+            if [ "x$COVERAGE" == "x1" ]
+            then
+              make devtest TESTS="--no-progress --job-count $JOB_COUNT \"--cover=$DEVEL_COVER_OPTIONS\" xt/*.pg"
+            else
+              make devtest TESTS="--no-progress --job-count 2 xt/*.pg"
+            fi
+
+      - run:
+          command: |
+            while [ $(pidof starman) ];
+            do
+              kill -SIGTERM `pidof starman`
+              echo -n "."
+              sleep 5
+            done
+            echo " done"
+
+      - run:
+          name: Upload coverage data
+          command: |
+            if [ "x$COVERAGE" == "x1" ]
+            then
+              COVERALLS_PARALLEL=true cover -report coveralls
+              COVERALLS_FLAG_NAME: Perl Tests
+              cover -report text > /tmp/artifact/coverage.txt
+            fi
+
+      - when:
+          condition:
+            equal: [ "$COVERAGE", "1" ]
+          steps:
+            - coveralls/upload:
+                parallel: true
+                flag_name: UI Tests
+                verbose: false
+
+      - when:
+          condition:
+            equal: [ "$COVERAGE", "1" ]
+          steps:
+            - coveralls/upload:
+                parallel_finished: true
+
   prove:
     steps:
       - run:
@@ -39,29 +247,17 @@ commands:
             fi
 
       - run:
-          name: Run API tests
-          command: |
-            export PWD="${CIRCLE_WORKING_DIRECTORY/#\~/$HOME}"
-            export PERL5LIB="lib:old/lib:$PERL5LIB"
-            if [ "x$COVERAGE" == "x1" ]
-            then
-              make jstest TESTS='--coverage'
-              # Make Coverage appear from root instead of UI to integrate in Coveralls
-              sed -i -E "s~^SF:(js-src|src)/~SF:UI/\1/~g" UI/coverage/lcov.info
-            else
-              make jstest
-            fi
-
-    
-      - run:
           command: |
             source $BASH_ENV
             export PERL5OPT="$PERL5OPT -MSyntax::Keyword::Try::Deparse"
+            while ! echo -n > /dev/tcp/localhost/5762; do
+              sleep 1
+            done
             if [ "x$COVERAGE" == "x1" ]
             then
-              make devtest TESTS="--no-progress --job-count $JOB_COUNT \"--cover=$DEVEL_COVER_OPTIONS\" t/ xt/"
+              make devtest TESTS="--no-progress --job-count $JOB_COUNT \"--cover=$DEVEL_COVER_OPTIONS\" t/"
             else
-              make devtest TESTS='--no-progress --job-count 2 t/ xt/'
+              make devtest TESTS='--no-progress --job-count 2 t/'
             fi
 
       - run:
@@ -141,8 +337,6 @@ commands:
           command: |
             mkdir -p logs/screens
             # these commands are in start.sh of the Perl container too:
-            cp doc/conf/ledgersmb.yaml ledgersmb.yaml
-            sed -i -e 's/# schema: public/schema: xyz/ ; s/extra_middleware: \[\]/extra_middleware: [ { "name": "+Test::Middleware::AdditionalEntrypoints", "args": [] } ]/' ledgersmb.yaml
 
       # Freshen up CPAN
       - restore_cache:
@@ -206,6 +400,9 @@ commands:
       - run:
           command: |
             source $BASH_ENV
+            cp doc/conf/ledgersmb.yaml ledgersmb.yaml
+            sed -i -e 's/# schema: public/schema: xyz/ ; s/extra_middleware: \[\]/extra_middleware: [ { "name": "+Test::Middleware::AdditionalEntrypoints", "args": [] } ]/' ledgersmb.yaml
+            cat ledgersmb.yaml
             if [ "x$COVERAGE" == "x1" ]
             then
               JOB_COUNT=2
@@ -320,7 +517,21 @@ jobs:
     # https://circleci.com/docs/2.0/configuration-reference/#resourceclass
     resource_class: large
 
-  test_webpack_firefox:
+
+  test_api:
+    <<: *defaults
+    executor:
+      name: test
+      perl: '5.38'
+      postgres: '16'
+    steps:
+      - prep_env:
+          perl: '5.38'
+      - start_starman
+      - start_proxy
+      - jest
+
+  test:
     <<: *defaults
     executor:
       name: test
@@ -334,6 +545,57 @@ jobs:
       - start_starman
       - start_proxy
       - prove
+    environment:
+      COA_TESTING: 1
+
+  test_author:
+    <<: *defaults
+    executor:
+      name: test
+      perl: '5.38'
+      postgres: '16'
+      browser: firefox
+      selenium: selenium/node-firefox
+    steps:
+      - prep_env:
+          perl: '5.38'
+      - start_starman
+      - start_proxy
+      - dev-prove
+    environment:
+      COA_TESTING: 1
+
+  test_pg:
+    <<: *defaults
+    executor:
+      name: test
+      perl: '5.38'
+      postgres: '16'
+      browser: firefox
+      selenium: selenium/node-firefox
+    steps:
+      - prep_env:
+          perl: '5.38'
+      - start_starman
+      - start_proxy
+      - dev-prove-pg
+    environment:
+      COA_TESTING: 1
+
+  test_webpack_firefox:
+    <<: *defaults
+    executor:
+      name: test
+      perl: '5.38'
+      postgres: '16'
+      browser: firefox
+      selenium: selenium/node-firefox
+    steps:
+      - prep_env:
+          perl: '5.38'
+      - start_starman
+      - start_proxy
+      - dev-prove-bdd
     environment:
       COA_TESTING: 1
 
@@ -352,11 +614,13 @@ _filters: &_filters
 workflows:
   workflow:
     jobs:
-#      - test_webpack_chrome:
-#          filters: *_filters
-
+      - test_api:
+          filters: *_filters
+      - test:
+          filters: *_filters
+      - test_author:
+          filters: *_filters
+      - test_pg:
+          filters: *_filters
       - test_webpack_firefox:
           filters: *_filters
-
-#      - test_webpack_opera:
-#          filters: *_filters
