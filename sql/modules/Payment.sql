@@ -1052,7 +1052,7 @@ BEGIN
  return var_payment_id;
 END;
 $$ LANGUAGE PLPGSQL;
--- I HAVE TO MAKE A COMMENT ON THIS FUNCTION
+
 COMMENT ON FUNCTION payment_post
 (in_datepaid                      date,
  in_account_class                 int,
