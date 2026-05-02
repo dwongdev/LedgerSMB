@@ -54,9 +54,18 @@ $$
 SELECT v.id, a.invoice, a.invnumber,
        eca.meta_number || '--' || e.name,
        v.batch_id, v.trans_id,
-       a.amount_bc, txn.transdate, 'Payable', v.batch_class
+       a.amount_bc, txn.transdate,
+       case
+       when bc.class = 'ap' then 'Payable'
+       else 'Receivable' end, v.batch_class
   FROM voucher v
-         JOIN ap a
+         JOIN (select trans_id, invoice, invnumber, amount_bc,
+                      entity_credit_account, open_item_id
+                 from ap
+                        union all
+               select trans_id, invoice, invnumber, amount_bc,
+                      entity_credit_account, open_item_id
+                 from ar) a
              ON (v.trans_id = a.trans_id)
          JOIN transactions txn
              ON a.trans_id = txn.id
@@ -70,12 +79,12 @@ SELECT v.id, a.invoice, a.invnumber,
    AND bc.class in ('ap', 'ar')
        UNION ALL
   -- TODO:  Add the class labels to the class table.
-SELECT v.id, ap.invoice, a.source,
+SELECT v.id, a.invoice, ac.source,
        eca.meta_number || '--'  || e.name,
        v.batch_id, v.trans_id,
-       sum(CASE WHEN bc.class LIKE 'payment%' THEN a.amount_bc * -1
-           WHEN bc.class LIKE 'receipt%' THEN a.amount_bc * -1
-           ELSE a.amount_bc  END), a.transdate,
+       sum(CASE WHEN bc.class LIKE 'payment%' THEN ac.amount_bc * -1
+           WHEN bc.class LIKE 'receipt%' THEN ac.amount_bc * -1
+           ELSE ac.amount_bc  END), ac.transdate,
        CASE
        WHEN bc.class = 'payment' THEN 'Payment'
        WHEN bc.class = 'payment_reversal' THEN 'Payment Reversal'
@@ -83,22 +92,26 @@ SELECT v.id, ap.invoice, a.source,
        WHEN bc.class = 'receipt_reversal' THEN 'Receipt Reversal'
        END, v.batch_class
   FROM voucher v
-         JOIN acc_trans a
-             ON (v.id = a.voucher_id)
+         JOIN acc_trans ac
+             ON (v.id = ac.voucher_id)
          JOIN batch_class bc
              ON (bc.id = v.batch_class)
-         JOIN ap
-             ON (ap.open_item_id = a.open_item_id)
+         JOIN (select invoice, open_item_id, entity_credit_account
+                 from ap
+                        union all
+               select invoice, open_item_id, entity_credit_account
+                 from ar) a
+             ON (a.open_item_id = ac.open_item_id)
          JOIN entity_credit_account eca
-             ON (ap.entity_credit_account = eca.id)
+             ON (a.entity_credit_account = eca.id)
          JOIN entity e
              ON (eca.entity_id = e.id)
  WHERE v.batch_id = in_batch_id
-   AND a.voucher_id = v.id
+   AND ac.voucher_id = v.id
    AND (bc.class like 'payment%'
         or bc.class like 'receipt%')
- GROUP BY v.id, ap.invoice, a.source, eca.meta_number, e.name,
-          v.batch_id, v.trans_id, a.transdate, bc.class
+ GROUP BY v.id, a.invoice, ac.source, eca.meta_number, e.name,
+          v.batch_id, v.trans_id, ac.transdate, bc.class
 
  UNION ALL
 SELECT v.id, false, txn.reference, txn.description,
