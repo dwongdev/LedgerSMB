@@ -183,18 +183,23 @@ SELECT b.id, c.class, b.control_code, b.description, u.username,
        b.created_on, b.default_date,
        sum(
          CASE
-         WHEN vc.id  = 1
-           THEN ap.amount_bc
-         WHEN vc.id = 2
-           THEN ar.amount_bc
-         WHEN al.amount_bc < 0 -- GL
+         WHEN al.amount_bc > 0
            THEN al.amount_bc
          ELSE 0
          END) AS transaction_total,
        sum(
-         CASE WHEN alc.description = 'AR' AND vc.id IN (6, 7)
+         CASE
+         WHEN exists (select 1
+                             from account_link alc
+                            where description = 'AR'
+                              and al.chart_id = alc.account_id)
+          AND vc.id IN (6, 7)
            THEN al.amount_bc
-         WHEN alc.description = 'AP' AND vc.id IN (3, 4)
+         WHEN exists (select 1
+                        from account_link alc
+                       where description = 'AP'
+                         and al.chart_id = alc.account_id)
+          AND vc.id IN (3, 4)
            THEN al.amount_bc * -1
          ELSE 0
          END
@@ -216,8 +221,6 @@ SELECT b.id, c.class, b.control_code, b.description, u.username,
          LEFT JOIN acc_trans al
              ON ((vc.id NOT IN (3, 4, 6, 7) AND v.trans_id = al.trans_id)
                  OR (vc.id IN (3, 4, 6, 7) AND al.voucher_id = v.id))
-         LEFT JOIN account_link alc
-             ON (al.chart_id = alc.account_id)
  WHERE (c.id = in_class_id OR in_class_id IS NULL) AND
        (b.description LIKE
        '%' || in_description || '%' OR
