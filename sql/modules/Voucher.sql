@@ -197,13 +197,12 @@ SELECT b.id, c.class, b.control_code, b.description, u.username,
          LEFT JOIN batch_class vc
              ON (v.batch_class = vc.id)
          LEFT JOIN ar
-             ON (vc.id = 2 AND v.trans_id = ar.trans_id)
+             ON v.trans_id = ar.trans_id
          LEFT JOIN ap
-             ON (vc.id = 1 AND v.trans_id = ap.trans_id)
+             ON v.trans_id = ap.trans_id
          LEFT JOIN acc_trans al
-             ON ((vc.id NOT IN (3, 4, 6, 7) AND v.trans_id = al.trans_id) OR
-                 (vc.id IN (3, 4, 6, 7)
-                 AND al.voucher_id = v.id))
+             ON ((vc.id NOT IN (3, 4, 6, 7) AND v.trans_id = al.trans_id)
+                 OR (vc.id IN (3, 4, 6, 7) AND al.voucher_id = v.id))
          LEFT JOIN account_link alc
              ON (al.chart_id = alc.account_id)
  WHERE (c.id = in_class_id OR in_class_id IS NULL) AND
