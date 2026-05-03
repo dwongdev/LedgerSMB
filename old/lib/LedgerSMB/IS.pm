@@ -791,10 +791,10 @@ sub post_invoice {
         $uid .= "$$";
 
         $query = q|
-            INSERT INTO transactions (table_name, trans_type_code, approved)
-            VALUES ('ar', 'ar', false)
+            INSERT INTO transactions (table_name, trans_type_code, approved, transdate)
+            VALUES ('ar', 'ar', false, ?)
             |;
-        $dbh->do($query) or $form->dberror($query);
+        $dbh->do($query, {}, $form->{transdate}) or $form->dberror($query);
 
         ($accno) = split /--/, $form->{AR};
         $query = q{
