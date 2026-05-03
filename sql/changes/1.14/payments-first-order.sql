@@ -93,7 +93,7 @@ select pm.trans_id, 'payment', pm.approved, p.payment_date,
              on pm.id = p.id;
 
 
--- fails if there are two or more payment accounts in a payment
+-- fails if there are two or more cash accounts in a payment
 -- which *was* supported by the single payments UI...
 update payment p
    set account_id = pm.chart_id,
