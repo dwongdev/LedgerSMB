@@ -643,12 +643,6 @@ sub invoice_details {
     $form->{invtotal} =
       ( $form->{taxincluded} ) ? $form->{total} : $form->{total} + $tax;
 
-    my $c = LedgerSMB::Num2text->new(
-        LedgerSMB::Locale->get_handle(
-            ($form->{language_code} ne "")
-            ? $form->{language_code} : $myconfig->{countrycode}
-        ));
-    $c->init;
     my $whole;
     ( $whole, $form->{decimal} ) = split /\./, $form->{invtotal};
     $form->{decimal} .= "00";
