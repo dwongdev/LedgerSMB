@@ -2018,6 +2018,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@eslint/js@npm:10.0.1":
+  version: 10.0.1
+  resolution: "@eslint/js@npm:10.0.1"
+  peerDependencies:
+    eslint: ^10.0.0
+  peerDependenciesMeta:
+    eslint:
+      optional: true
+  checksum: 10c0/9f3fcaf71ba7fdf65d82e8faad6ecfe97e11801cc3c362b306a88ea1ed1344ae0d35330dddb0e8ad18f010f6687a70b75491b9e01c8af57acd7987cee6b3ec6c
+  languageName: node
+  linkType: hard
+
 "@eslint/js@npm:9.39.4, @eslint/js@npm:^9.0.0":
   version: 9.39.4
   resolution: "@eslint/js@npm:9.39.4"
@@ -12057,7 +12069,7 @@ __metadata:
     "@babel/plugin-transform-object-rest-spread": "npm:^7.24.7"
     "@babel/preset-env": "npm:7.29.3"
     "@ehuelsmann/jest-openapi": "npm:0.16.1"
-    "@eslint/js": "npm:9.39.4"
+    "@eslint/js": "npm:10.0.1"
     "@pinia/testing": "npm:1.0.3"
     "@quasar/app-webpack": "npm:^4.2.0"
     "@quasar/extras": "npm:^1.16.17"
